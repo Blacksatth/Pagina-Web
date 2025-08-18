@@ -1,0 +1,70 @@
+
+@import "tailwindcss";
+
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+#product-image{
+  background: #1b2431;
+}
+#prueba {
+  margin-top: 10px;
+  border-radius: 20px;
+/* Para que el borde redondeado afecte la imagen */
+
+  border: 0.5px solid #a8a8a8;
+ 
+  transition: transform 0.2s ease;
+}
+
+#prueba:hover {
+  transform: scale(1.05);
+  
+}
+
+
+#name{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  left: 120px;
+}
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+#name{
+  color: #ffffff;
+  font-weight: bold;
+  margin-left: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
