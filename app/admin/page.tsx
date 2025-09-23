@@ -1,44 +1,56 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { getIdTokenResult } from 'firebase/auth'
-import useAuth from '../hooks/useAuth'
+import { useRouter } from 'next/navigation'
 import AdminPanel from '../components/AdminPanel'
 
 export default function AdminPage() {
-  const { user, loading } = useAuth()
   const router = useRouter()
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [checkingAdmin, setCheckingAdmin] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [hasAccess, setHasAccess] = useState(false)
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      if (!loading && user) {
-        const tokenResult = await getIdTokenResult(user)
-        const isAdminClaim = tokenResult.claims.admin === true
-        setIsAdmin(isAdminClaim)
-        setCheckingAdmin(false)
+    const checkRole = async () => {
+      const token = localStorage.getItem('token') // token JWT de sesión
+      if (!token) {
+        setLoading(false)
+        router.replace('/login')
+        return
+      }
 
-        if (!isAdminClaim) {
-          console.warn('⛔ No eres admin')
-          router.push('/')
+      try {
+        const res = await fetch('http://localhost:3001/verify-admin', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        if (!res.ok) {
+          setLoading(false)
+          router.replace('/')
+          return
         }
-      } else if (!loading && !user) {
-        router.push('/login')
+
+        const data = await res.json()
+        console.log('Role recibido desde PHP:', data.role)
+
+        if (data.role && data.role.toLowerCase() === 'admin') {
+          setHasAccess(true) // ✅ Solo permitimos admins
+        } else {
+          router.replace('/')
+        }
+      } catch (err) {
+        console.error('Error verificando rol:', err)
+        router.replace('/login')
+      } finally {
+        setLoading(false)
       }
     }
 
-    checkAdmin()
-  }, [user, loading, router])
+    checkRole()
+  }, [router])
 
-  if (loading || checkingAdmin) {
-    return <p className="text-center mt-10">Verificando acceso...</p>
-  }
+  if (loading) return <p className="text-center mt-10">Verificando acceso...</p>
+  if (!hasAccess) return <p className="text-center mt-10">No tienes acceso</p>
 
-  return (
-    <main className="min-h-screen bg-gray-900 text-white px-4 py-10">
-      {isAdmin ? <AdminPanel /> : <p className="text-center mt-10">Acceso denegado</p>}
-    </main>
-  )
+  // 🔹 Renderizamos AdminPanel solo si el usuario es admin
+  return <AdminPanel />
 }

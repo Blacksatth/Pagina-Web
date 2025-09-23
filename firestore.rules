@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to products for everyone
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Allow authenticated users to manage their own cart
+    match /users/{userId}/cart/{cartId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /admin/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+

@@ -1,0 +1,39 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String   @unique
+  password  String
+  role      String   @default("user") 
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Float
+  category    String
+  description String?
+  stock       Int      @default(0)
+  onSale      Boolean  @default(false)
+  salePrice   Float?
+  image       String   // 📌 url principal en Cloudinary
+  publicId    String   // 📌 publicId de la principal
+  images      Image[]  // 📌 relación con imágenes extras
+}
+
+model Image {
+  id        Int     @id @default(autoincrement())
+  url       String  // 📌 url en Cloudinary
+  publicId  String  // 📌 publicId en Cloudinary
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+}

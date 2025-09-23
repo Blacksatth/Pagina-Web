@@ -1,14 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import {
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from 'firebase/auth'
-import { auth } from '../lib/firebase'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@/app/context/UserContext'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -16,30 +10,16 @@ export default function LoginForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { setUser } = useUser()
 
-  // Redirige si ya está logueado
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/admin')
-      }
-    })
-    return () => unsubscribe()
-  }, [router])
-
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return re.test(email)
-  }
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   const handleLogin = async () => {
     setError('')
-
     if (!email || !password) {
       setError('Por favor, completa todos los campos.')
       return
     }
-
     if (!validateEmail(email)) {
       setError('El correo no es válido.')
       return
@@ -47,35 +27,26 @@ export default function LoginForm() {
 
     try {
       setLoading(true)
-      await signInWithEmailAndPassword(auth, email, password)
-      router.push('/admin')
+      const res = await fetch('http://localhost:3001/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Error desconocido')
+        return
+      }
+
+      localStorage.setItem('token', data.token)
+      setUser(email, data.role)
+
+      router.push(data.role === 'admin' ? '/admin' : '/')
     } catch (err: unknown) {
-      const errorMap: { [key: string]: string } = {
-        'auth/user-not-found': 'Usuario no encontrado.',
-        'auth/wrong-password': 'Contraseña incorrecta.',
-        'auth/invalid-email': 'Correo inválido.',
-        'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.',
-      }
-
-      if (typeof err === 'object' && err !== null && 'code' in err) {
-        const errorCode = (err as { code: string }).code
-        setError(errorMap[errorCode] || 'Error al iniciar sesión.')
-      } else {
-        setError('Error desconocido al iniciar sesión.')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true)
-      const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
-      router.push('/admin')
-    } catch {
-      setError('Error al iniciar sesión con Google.')
+      if (err instanceof Error) setError(err.message)
+      else setError('Error desconocido al iniciar sesión')
     } finally {
       setLoading(false)
     }
@@ -84,7 +55,6 @@ export default function LoginForm() {
   return (
     <div className="bg-gray-800 p-6 max-w-md mx-auto rounded-xl mt-10 text-white">
       <h2 className="text-2xl font-bold mb-4 text-center">🔐 Iniciar sesión</h2>
-
       {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
       <input
@@ -110,16 +80,6 @@ export default function LoginForm() {
         }`}
       >
         {loading ? 'Ingresando...' : 'Iniciar sesión'}
-      </button>
-
-      <button
-        onClick={handleGoogleLogin}
-        disabled={loading}
-        className={`w-full px-4 py-2 rounded transition ${
-          loading ? 'bg-gray-600' : 'bg-blue-600 hover:bg-blue-700'
-        }`}
-      >
-        {loading ? 'Cargando...' : 'Iniciar sesión con Google'}
       </button>
 
       <div className="text-center mt-6">

@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../lib/firebase'
 
 export default function RegisterForm() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,8 +14,17 @@ export default function RegisterForm() {
     setLoading(true)
     setError('')
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
+      const res = await fetch('http://localhost:3001/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email,password,role: "user" })
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Error al registrar')
+
       setSuccess(true)
+      setName('')
       setEmail('')
       setPassword('')
     } catch (err: unknown) {
@@ -31,7 +39,7 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="bg-gray-800 p-6 max-w-md mx-auto rounded-xl mt-10">
+    <div className="bg-gray-800 p-6 max-w-md mx-auto rounded-xl mt-10 text-white">
       <h2 className="text-2xl font-bold mb-4 text-center">📝 Registro</h2>
 
       {success && (
@@ -43,6 +51,13 @@ export default function RegisterForm() {
         <p className="text-red-500 mb-4 text-center">{error}</p>
       )}
 
+      <input
+        type="text"
+        placeholder="Nombre"
+        className="w-full mb-3 p-2 rounded bg-gray-700"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
       <input
         type="email"
         placeholder="Correo electrónico"
