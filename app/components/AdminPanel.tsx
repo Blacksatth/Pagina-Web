@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Edit, Trash2, Image as ImageIcon } from "lucide-react";
 
@@ -46,44 +46,41 @@ export default function AdminPanel() {
     }
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch("http://localhost:3001/products");
-      const data = await res.json();
+      const data: Product[] = await res.json();
       setProducts(data);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       showMessage("Error al cargar productos", "error");
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
- const uploadToCloudinary = async (file: File): Promise<{ url: string, publicId: string }> => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "productos");
-  formData.append("folder", "products");
+  const uploadToCloudinary = async (file: File): Promise<{ url: string; publicId: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "productos");
+    formData.append("folder", "products");
 
-  const res = await fetch("https://api.cloudinary.com/v1_1/ddpexfbjn/image/upload", {
-    method: "POST",
-    body: formData,
-  });
-  const data = await res.json();
-  return { url: data.secure_url, publicId: data.public_id };
-};
-
+    const res = await fetch("https://api.cloudinary.com/v1_1/ddpexfbjn/image/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    return { url: data.secure_url, publicId: data.public_id };
+  };
 
   const handleAddImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-
     setSubmitting(true);
 
     try {
       const urls: string[] = [];
-
       for (let i = 0; i < e.target.files.length; i++) {
         const { url } = await uploadToCloudinary(e.target.files[i]);
         urls.push(url);
@@ -93,7 +90,7 @@ export default function AdminPanel() {
         ...prev,
         images: [...(prev.images || []), ...urls],
       }));
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       showMessage("Error al subir imágenes", "error");
     } finally {
@@ -115,7 +112,7 @@ export default function AdminPanel() {
     setSubmitting(true);
 
     try {
-      const payload = {
+      const payload: Omit<Product, "id"> = {
         name: form.name.trim(),
         price: parseFloat(form.price),
         category: form.category.trim(),
@@ -135,14 +132,19 @@ export default function AdminPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Error guardando producto");
 
       showMessage(editId ? "Producto actualizado" : "Producto agregado", "success");
       resetForm();
       fetchProducts();
-    } catch (err: any) {
-      showMessage(err.message || "Error desconocido", "error");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        showMessage(err.message, "error");
+      } else {
+        showMessage("Error desconocido", "error");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -184,7 +186,7 @@ export default function AdminPanel() {
       if (!res.ok) throw new Error("Error al eliminar producto");
       showMessage("Producto eliminado", "success");
       fetchProducts();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       showMessage("Error al eliminar producto", "error");
     }
