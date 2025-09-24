@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Edit, Trash2, Image as ImageIcon } from "lucide-react"
 
@@ -33,39 +33,41 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<Message | null>(null)
 
-  useEffect(() => {
-    fetchProducts()
-  }, [])
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch("/api/products")
       if (!response.ok) throw new Error("Error al obtener productos")
       const data: Product[] = await response.json()
 
-      const transformedProducts: Product[] = data.map((product: Product) => ({
+      const transformedProducts: Product[] = data.map((product) => ({
         ...product,
         extraImages: product.images?.map((img: ImageData) => img.url) || [],
       }))
       setProducts(transformedProducts)
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Error desconocido"
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Error desconocido"
       showMessage(errorMessage, "error")
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const deleteProduct = async (id: string) => {
     if (!confirm("¿Seguro que quieres eliminar este producto?")) return
     try {
       const response = await fetch(`/api/products/${id}`, { method: "DELETE" })
       if (!response.ok) throw new Error("Error al eliminar producto")
-      setProducts(products.filter((p) => p.id !== id))
+      setProducts((prev) => prev.filter((p) => p.id !== id))
       showMessage("Producto eliminado con éxito", "success")
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Error desconocido"
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Error desconocido"
       showMessage(errorMessage, "error")
     }
   }
@@ -121,9 +123,7 @@ export default function AdminPanel() {
                   ? `$${product.salePrice} (Oferta)`
                   : `$${product.price}`}
               </p>
-              <p className="text-sm text-gray-500">
-                Stock: {product.stock}
-              </p>
+              <p className="text-sm text-gray-500">Stock: {product.stock}</p>
 
               <div className="flex justify-end gap-2 mt-3">
                 <button className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
