@@ -24,7 +24,7 @@ export default function AdminPanel() {
     category: "",
     description: "",
     images: [] as string[],
-    stock: 0,
+    stock: "" as number | "", // Modificado: El stock ahora puede ser un número o una cadena vacía
     onSale: false,
     salePrice: 0,
   });
@@ -117,7 +117,7 @@ export default function AdminPanel() {
         price: parseFloat(form.price),
         category: form.category.trim(),
         description: form.description.trim(),
-        stock: form.stock,
+        stock: typeof form.stock === "string" ? 0 : form.stock, // Modificado: Convertimos "" a 0 antes de enviar
         onSale: form.onSale,
         salePrice: form.onSale ? form.salePrice : undefined,
         image: form.images[0],
@@ -157,7 +157,7 @@ export default function AdminPanel() {
       category: product.category,
       description: product.description,
       images: [product.image, ...(product.extraImages || [])],
-      stock: product.stock,
+      stock: product.stock, // Modificado: el stock se carga como un número directamente
       onSale: product.onSale,
       salePrice: product.salePrice || 0,
     });
@@ -172,7 +172,7 @@ export default function AdminPanel() {
       category: "",
       description: "",
       images: [],
-      stock: 0,
+      stock: "", // Modificado: stock vuelve a ser una cadena vacía
       onSale: false,
       salePrice: 0,
     });
@@ -239,7 +239,15 @@ export default function AdminPanel() {
                   min="0"
                   placeholder="Stock"
                   value={form.stock}
-                  onChange={(e) => setForm({ ...form, stock: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => {
+                    // Modificado: Si el valor es una cadena vacía, mantenemos el estado como cadena vacía.
+                    // De lo contrario, lo convertimos a un número.
+                    const value = e.target.value;
+                    setForm({
+                      ...form,
+                      stock: value === "" ? "" : parseInt(value),
+                    });
+                  }}
                   className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600"
                 />
               </div>
@@ -424,7 +432,6 @@ export default function AdminPanel() {
             </div>
           </div>
         </div>
-                  
       </div>
     </div>
   );
