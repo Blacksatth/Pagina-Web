@@ -1,6 +1,8 @@
-'use client'
+"use client";
 
 import { useState } from 'react'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL; // <-- Variable de entorno
 
 export default function RegisterForm() {
   const [name, setName] = useState('')
@@ -14,10 +16,10 @@ export default function RegisterForm() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('http://localhost:3001/register', {
+      const res = await fetch(`${API_URL}/register`, { // <-- Usamos la variable de entorno
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email,password,role: "user" })
+        body: JSON.stringify({ name, email, password, role: "user" })
       })
 
       const data = await res.json()

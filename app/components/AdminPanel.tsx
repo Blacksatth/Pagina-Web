@@ -17,6 +17,8 @@ interface Product {
   salePrice?: number;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL; // <-- Variable de entorno
+
 export default function AdminPanel() {
   const [form, setForm] = useState({
     name: "",
@@ -24,7 +26,7 @@ export default function AdminPanel() {
     category: "",
     description: "",
     images: [] as string[],
-    stock: "" as number | "", // Modificado: El stock ahora puede ser un número o una cadena vacía
+    stock: "" as number | "",
     onSale: false,
     salePrice: 0,
   });
@@ -48,7 +50,7 @@ export default function AdminPanel() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:3001/products");
+      const res = await fetch(`${API_URL}/products`);
       const data: Product[] = await res.json();
       setProducts(data);
     } catch (err: unknown) {
@@ -117,14 +119,14 @@ export default function AdminPanel() {
         price: parseFloat(form.price),
         category: form.category.trim(),
         description: form.description.trim(),
-        stock: typeof form.stock === "string" ? 0 : form.stock, // Modificado: Convertimos "" a 0 antes de enviar
+        stock: typeof form.stock === "string" ? 0 : form.stock,
         onSale: form.onSale,
         salePrice: form.onSale ? form.salePrice : undefined,
         image: form.images[0],
         extraImages: form.images.slice(1),
       };
 
-      const url = editId ? `http://localhost:3001/products/${editId}` : "http://localhost:3001/products";
+      const url = editId ? `${API_URL}/products/${editId}` : `${API_URL}/products`;
       const method = editId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -157,7 +159,7 @@ export default function AdminPanel() {
       category: product.category,
       description: product.description,
       images: [product.image, ...(product.extraImages || [])],
-      stock: product.stock, // Modificado: el stock se carga como un número directamente
+      stock: product.stock,
       onSale: product.onSale,
       salePrice: product.salePrice || 0,
     });
@@ -172,7 +174,7 @@ export default function AdminPanel() {
       category: "",
       description: "",
       images: [],
-      stock: "", // Modificado: stock vuelve a ser una cadena vacía
+      stock: "",
       onSale: false,
       salePrice: 0,
     });
@@ -182,7 +184,7 @@ export default function AdminPanel() {
   const handleDeleteProduct = async (id: string) => {
     if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
     try {
-      const res = await fetch(`http://localhost:3001/products/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/products/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar producto");
       showMessage("Producto eliminado", "success");
       fetchProducts();
