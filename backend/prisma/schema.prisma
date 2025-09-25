@@ -2,6 +2,11 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+const prisma = new PrismaClient({
+  datasources: {
+    db: { url: process.env.DATABASE_URL }
+  }
+});
 
 generator client {
   provider = "prisma-client-js"
