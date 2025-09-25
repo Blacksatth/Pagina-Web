@@ -228,6 +228,7 @@
       }
     })
 
-
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
     // =========================
-    app.listen(3001, () => console.log('Servidor corriendo en http://localhost:3001'))
+    //app.listen(3001, () => console.log('Servidor corriendo en http://localhost:3001'))
