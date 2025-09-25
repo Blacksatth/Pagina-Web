@@ -1,4 +1,4 @@
-import ProductSlider from '@/app/components/ProductSlider'
+
 import ProductGrid from './components/ProductGrid'
 import ContactSection from './components/ContactSection'
 import Footer from './components/Footer'
