@@ -1,51 +1,58 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { cloudinaryUrl } from "@/app/utils/cloudinary"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { cloudinaryUrl } from "@/app/utils/cloudinary";
 
 interface Product {
-  id: string
-  name: string
-  price: number
-  category: string
-  description: string
-  image: string
-  extraImages: string[]
-  stock: number
-  onSale: boolean
-  salePrice?: number
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  image: string;
+  extraImages: string[];
+  stock: number;
+  onSale: boolean;
+  salePrice?: number;
 }
 
 export default function ProductGrid() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [filter, setFilter] = useState("")
-  const [searchTerm, setSearchTerm] = useState("")
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filter, setFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL; // <-- tu backend en Railway
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3001/products")
-        const data = await res.json()
-        setProducts(data)
+        if (!API_URL) throw new Error("API_URL no está definida");
+        const res = await fetch(`${API_URL}/products`);
+        if (!res.ok) throw new Error("Error al cargar productos");
+        const data = await res.json();
+        setProducts(data);
       } catch (err) {
-        console.error("Error cargando productos:", err)
+        console.error("Error cargando productos:", err);
       }
-    }
-    fetchProducts()
-  }, [])
+    };
+    fetchProducts();
+  }, [API_URL]);
 
-  const categories = [...new Set(products.map(p => p.category))]
+  const categories = [...new Set(products.map(p => p.category))];
   const filtered = products
     .filter(p => !filter || p.category === filter)
-    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+  const capitalize = (text: string) =>
+    text.charAt(0).toUpperCase() + text.slice(1);
 
   return (
     <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">🧢 Nuestros Productos</h2>
+      <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
+        🧢 Nuestros Productos
+      </h2>
 
       {/* Buscador */}
       <div className="max-w-md mx-auto mb-6">
@@ -88,7 +95,7 @@ export default function ProductGrid() {
             key={product.id}
             href={`/products/${product.id}`}
             className="group bg-gray-800 p-4 rounded-2xl shadow-md hover:shadow-xl hover:scale-[1.03] transition-all duration-300 flex flex-col"
-           >
+          >
             <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-4">
               <Image
                 src={cloudinaryUrl(product.image, 500, 400) || "/placeholder.jpg"}
@@ -108,7 +115,9 @@ export default function ProductGrid() {
               ${Number(product.price).toLocaleString("es-CO")}
             </p>
             {product.onSale && (
-              <p className="text-yellow-400 text-sm mt-1">Oferta: ${product.salePrice?.toLocaleString("es-CO")}</p>
+              <p className="text-yellow-400 text-sm mt-1">
+                Oferta: ${product.salePrice?.toLocaleString("es-CO")}
+              </p>
             )}
           </Link>
         ))}
@@ -116,8 +125,10 @@ export default function ProductGrid() {
 
       {/* Mensaje si no hay productos */}
       {filtered.length === 0 && (
-        <p className="text-center text-gray-400 mt-10 text-lg">No se encontraron productos.</p>
+        <p className="text-center text-gray-400 mt-10 text-lg">
+          No se encontraron productos.
+        </p>
       )}
     </section>
-  )
+  );
 }
