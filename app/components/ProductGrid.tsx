@@ -23,14 +23,19 @@ export default function ProductGrid() {
   const [filter, setFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL; // <-- tu backend en Railway
+  // ⚡ Usar NEXT_PUBLIC_API_URL
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
   useEffect(() => {
+    if (!API_URL) {
+      console.error("❌ NEXT_PUBLIC_API_URL no está definida. Configúrala en Vercel.");
+      return;
+    }
+
     const fetchProducts = async () => {
       try {
-        if (!API_URL) throw new Error("API_URL no está definida");
         const res = await fetch(`${API_URL}/products`);
-        if (!res.ok) throw new Error("Error al cargar productos");
+        if (!res.ok) throw new Error(`Error al cargar productos: ${res.statusText}`);
         const data = await res.json();
         setProducts(data);
       } catch (err) {
@@ -40,10 +45,10 @@ export default function ProductGrid() {
     fetchProducts();
   }, [API_URL]);
 
-  const categories = [...new Set(products.map(p => p.category))];
+  const categories = [...new Set(products.map((p) => p.category))];
   const filtered = products
-    .filter(p => !filter || p.category === filter)
-    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    .filter((p) => !filter || p.category === filter)
+    .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const capitalize = (text: string) =>
     text.charAt(0).toUpperCase() + text.slice(1);
@@ -60,7 +65,7 @@ export default function ProductGrid() {
           type="text"
           placeholder="🔍 Buscar producto..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full p-3 rounded-md bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
@@ -75,7 +80,7 @@ export default function ProductGrid() {
         >
           Todos
         </button>
-        {categories.map(cat => (
+        {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
@@ -90,7 +95,7 @@ export default function ProductGrid() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filtered.map(product => (
+        {filtered.map((product) => (
           <Link
             key={product.id}
             href={`/products/${product.id}`}
@@ -123,7 +128,6 @@ export default function ProductGrid() {
         ))}
       </div>
 
-      {/* Mensaje si no hay productos */}
       {filtered.length === 0 && (
         <p className="text-center text-gray-400 mt-10 text-lg">
           No se encontraron productos.
