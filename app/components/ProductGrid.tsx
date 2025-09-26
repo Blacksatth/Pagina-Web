@@ -34,7 +34,7 @@ export default function ProductGrid() {
 
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/products`);
+        const res = await fetch(`${API_URL}/products`);
         if (!res.ok) throw new Error(`Error al cargar productos: ${res.statusText}`);
         const data = await res.json();
         setProducts(data);
