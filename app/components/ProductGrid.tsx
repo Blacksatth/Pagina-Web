@@ -26,20 +26,24 @@ export default function ProductGrid() {
   // ⚡ Usar NEXT_PUBLIC_API_URL
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
- useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch("/api/products");
-      if (!res.ok) throw new Error(`Error al cargar productos: ${res.statusText}`);
-      const data = await res.json();
-      setProducts(data);
-    } catch (err) {
-      console.error("Error cargando productos:", err);
+  useEffect(() => {
+    if (!API_URL) {
+      console.error("❌ NEXT_PUBLIC_API_URL no está definida. Configúrala en Vercel.");
+      return;
     }
-  };
-  fetchProducts();
-}, []);
 
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API_URL}/products`);
+        if (!res.ok) throw new Error(`Error al cargar productos: ${res.statusText}`);
+        const data = await res.json();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error cargando productos:", err);
+      }
+    };
+    fetchProducts();
+  }, [API_URL]);
 
   const categories = [...new Set(products.map((p) => p.category))];
   const filtered = products
